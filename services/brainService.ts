@@ -1,9 +1,9 @@
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export interface BrainExecutionResult {
   success: boolean;
@@ -43,7 +43,8 @@ export class BrainService {
       logs.push('🧠 Starting 18-Phase MERMEDA Pipeline...');
       
       const brainRunScript = path.join(this.brainPath, 'brain.run.sh');
-      const { stdout, stderr } = await execAsync(`bash "${brainRunScript}"`, {
+      // Use execFile instead of exec to prevent shell injection
+      const { stdout, stderr } = await execFileAsync('bash', [brainRunScript], {
         cwd: this.rootPath,
         env: { ...process.env, JQ_BIN: 'jq' }
       });
@@ -76,10 +77,18 @@ export class BrainService {
     const logs: string[] = [];
     
     try {
-      logs.push(`🧠 Running phase: ${phaseName}...`);
+      // Sanitize phase name to prevent path traversal
+      const sanitizedPhaseName = phaseName.replace(/[^a-z0-9.\-_]/gi, '');
+      logs.push(`🧠 Running phase: ${sanitizedPhaseName}...`);
       
-      const phaseScript = path.join(this.brainPath, `brain.${phaseName}.sh`);
-      const { stdout, stderr } = await execAsync(`bash "${phaseScript}"`, {
+      const phaseScript = path.join(this.brainPath, `brain.${sanitizedPhaseName}.sh`);
+      // Verify script exists and is within brainPath
+      if (!phaseScript.startsWith(this.brainPath)) {
+        throw new Error('Invalid phase script path');
+      }
+      
+      // Use execFile instead of exec to prevent shell injection
+      const { stdout, stderr } = await execFileAsync('bash', [phaseScript], {
         cwd: this.rootPath,
         env: { ...process.env, JQ_BIN: 'jq' }
       });
@@ -227,7 +236,9 @@ export class BrainService {
    */
   async createRepairPR(repoName: string): Promise<{ success: boolean; prUrl?: string; error?: string }> {
     try {
-      const { stdout } = await execAsync(`bash "${path.join(this.brainPath, 'brain.auto-pr.sh')}"`, {
+      const autoPrScript = path.join(this.brainPath, 'brain.auto-pr.sh');
+      // Use execFile instead of exec to prevent shell injection
+      const { stdout } = await execFileAsync('bash', [autoPrScript], {
         cwd: this.rootPath
       });
       

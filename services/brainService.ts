@@ -77,17 +77,17 @@ export class BrainService {
     const logs: string[] = [];
     
     try {
-      // Sanitize phase name to prevent path traversal - only allow alphanumeric, hyphen, underscore
-      const sanitizedPhaseName = phaseName.replace(/[^a-z0-9\-_]/gi, '');
-      // Additional check to reject any path traversal attempts
-      if (sanitizedPhaseName.includes('..') || sanitizedPhaseName.includes('/') || sanitizedPhaseName.includes('\\')) {
+      // Validate phase name BEFORE sanitization to catch path traversal attempts
+      if (phaseName.includes('..') || phaseName.includes('/') || phaseName.includes('\\')) {
         throw new Error('Invalid phase name: path traversal attempt detected');
       }
       
+      // Sanitize phase name - allow alphanumeric, period, hyphen, underscore
+      const sanitizedPhaseName = phaseName.replace(/[^a-z0-9.\-_]/gi, '');
       logs.push(`🧠 Running phase: ${sanitizedPhaseName}...`);
       
       const phaseScript = path.join(this.brainPath, `brain.${sanitizedPhaseName}.sh`);
-      // Verify script exists and is within brainPath
+      // Verify script path is within brainPath (defense in depth)
       if (!phaseScript.startsWith(this.brainPath)) {
         throw new Error('Invalid phase script path');
       }

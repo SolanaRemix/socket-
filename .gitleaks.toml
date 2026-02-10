@@ -1,7 +1,7 @@
 # Gitleaks Configuration for REPO BRAIN HOSPITAL
 # This configuration customizes secret detection for this repository
 
-title = "Gitleaks Configuration for Socket-"
+title = "Gitleaks Configuration for REPO BRAIN HOSPITAL"
 
 [extend]
 # Use default Gitleaks rules as base

@@ -84,6 +84,12 @@ export class BrainService {
       
       // Sanitize phase name - allow alphanumeric, period, hyphen, underscore
       const sanitizedPhaseName = phaseName.replace(/[^a-z0-9.\-_]/gi, '');
+      
+      // Ensure sanitized name is not empty
+      if (!sanitizedPhaseName || sanitizedPhaseName.length === 0) {
+        throw new Error('Invalid phase name: no valid characters after sanitization');
+      }
+      
       logs.push(`🧠 Running phase: ${sanitizedPhaseName}...`);
       
       const phaseScript = path.join(this.brainPath, `brain.${sanitizedPhaseName}.sh`);

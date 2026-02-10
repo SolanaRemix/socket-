@@ -1,0 +1,55 @@
+name: Gitleaks Security Scan
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+jobs:
+  gitleaks:
+    name: Secret Scanning with Gitleaks
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for comprehensive scanning
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}  # Optional: for Gitleaks Pro
+        with:
+          config-path: .gitleaks.toml  # Optional: use custom config if exists
+
+      - name: Upload Gitleaks Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.json
+          retention-days: 30
+
+      - name: Security Summary
+        if: always()
+        run: |
+          echo "## 🛡️ Gitleaks Security Scan Complete" >> $GITHUB_STEP_SUMMARY
+          if [ -f gitleaks-report.json ]; then
+            echo "⚠️ **Secrets or sensitive data detected!**" >> $GITHUB_STEP_SUMMARY
+            echo "Please review the Gitleaks report artifact for details." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **No secrets detected**" >> $GITHUB_STEP_SUMMARY
+          fi

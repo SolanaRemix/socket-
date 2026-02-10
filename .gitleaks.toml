@@ -1,0 +1,69 @@
+# Gitleaks Configuration for REPO BRAIN HOSPITAL
+# This configuration customizes secret detection for this repository
+
+title = "Gitleaks Configuration for REPO BRAIN HOSPITAL"
+
+[extend]
+# Use default Gitleaks rules as base
+useDefault = true
+
+[allowlist]
+# Allow patterns that are safe (e.g., example keys in documentation)
+paths = [
+  # Documentation files can contain example patterns
+  '''\.md$''',
+  '''SECURITY\.md$''',
+  '''README\.md$''',
+  # Test files may contain mock/dummy keys
+  '''brain\.test\.sh$''',
+  '''.repo-brain-test-sandbox/''',
+  # AI Guard script contains detection patterns
+  '''brain\.ai\.guard\.sh$''',
+  '''brain\.firewall\.sh$''',
+]
+
+# Allow known safe patterns
+regexes = [
+  # Example/placeholder keys in .env.example
+  '''your_api_key_here''',
+  '''your_token_here''',
+  '''your_.*_here''',
+  # Mock/test patterns in constants
+  '''MOCK_.*''',
+]
+
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key"
+regex = '''sk-[a-zA-Z0-9]{48}'''
+keywords = ["sk-"]
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API Key"
+regex = '''ant-api-[a-zA-Z0-9]{60}'''
+keywords = ["ant-api-"]
+
+[[rules]]
+id = "google-api-key"
+description = "Google API Key"
+regex = '''AIzaSy[a-zA-Z0-9_-]{33}'''
+keywords = ["AIzaSy"]
+
+[[rules]]
+id = "ethereum-private-key"
+description = "Ethereum Private Key"
+regex = '''(?i)(?:private.?key|pk|wallet).*0x[a-fA-F0-9]{64}'''
+keywords = ["private", "wallet", "0x"]
+
+[[rules]]
+id = "github-token"
+description = "GitHub Personal Access Token"
+regex = '''ghp_[a-zA-Z0-9]{36}'''
+keywords = ["ghp_"]
+
+[[rules]]
+id = "generic-secret"
+description = "Generic Secret Pattern"
+regex = '''(?i)(?:secret|password|passwd|pwd|token|api.?key).*[=:]\s*["\']?[a-zA-Z0-9\-_]{32,}["\']?'''
+keywords = ["secret", "password", "token", "apikey"]
